@@ -2,6 +2,7 @@ import urllib.request, urllib.parse, urllib.error
 import re
 from selenium import webdriver
 import random
+import time
 
 '''spider requires the argument 'page', which is the url of a kickstarter discover page, then look for inner url links to
 individual projects, and return a list of url to the projects' comment section'''
@@ -88,6 +89,7 @@ class mycrawl:
 
         project_urls = list()
         for url in tmp:
+            print(url + ' comment page has been recorded!')
             project_urls.append(url[11:]+'/comments')
         return project_urls
 
@@ -96,25 +98,27 @@ class mycrawl:
         Return a list of urls in the form of '"rewards":"https://www.kickstarter.com/projects/company_name/project_name' (str)
         '''
 
-    def scrape(self, project_urls):
+    def scrape(self, project_urls, webdriver):
 
         if not project_urls:
             print('No More Comment Pages.')
             return False
 
         load_more_xpath = '//*[@id="react-project-comments"]/div/button'
-        f = open('email_harvest.txt', 'a')
+        f = open('email_harvest.txt', 'a+')
 
-        driver = webdriver.Safari()
+        driver = webdriver
 
         for url in project_urls:
 
             driver.get(url)
 
             while True:
-                driver.implicitly_wait(5)
+                driver.implicitly_wait(10)
 
-                try: driver.find_element_by_xpath(load_more_xpath).click()
+                try:
+                    driver.find_element_by_xpath(load_more_xpath).click()
+                    time.sleep(random.choice([second for second in range(10,25)]))
                 except: break
 
             page_source = driver.page_source
@@ -122,7 +126,6 @@ class mycrawl:
             for email in emails:
                 f.write(email + '\n')
 
-        driver.close()
         f.close()
 
         '''
@@ -131,18 +134,44 @@ class mycrawl:
         Automatically, it writes all the emails harvested in the link in the local file, email_harvest.txt
         '''
 
+#proxy example
+'''
+ myProxy = "http://149.215.113.110:70"
+
+        proxy = Proxy({
+        'proxyType': ProxyType.MANUAL,
+        'httpProxy': myProxy,
+        'ftpProxy': myProxy,
+        'sslProxy': myProxy,
+        'noProxy':''})
+
+        self.driver = webdriver.Firefox(proxy=proxy)
+'''
+
 hyuck_crawl = mycrawl()
 kickstarter_url_list = list()
 
+random_box = range(2, 10)
+random_box1 = range(5, 25)
+
+
 while True:
     tmp = hyuck_crawl.pager()
-    if tmp: kickstarter_url_list.append(tmp)
+    if tmp:
+        kickstarter_url_list.append(tmp)
+        print(tmp + ' page has been parsed!')
+        time.sleep(random.choice(random_box))
     else: break
 
-for url in kickstarter_url_list:
-    kickstarter_comment_page_links = hyuck_crawl.spider(url)
-    hyuck_crawl.scrape(kickstarter_comment_page_links)
+driver = webdriver.Safari()
 
+for url in kickstarter_url_list:
+    time.sleep(random.choice(random_box))
+    kickstarter_comment_page_links = hyuck_crawl.spider(url)
+    time.sleep(random.choice(random_box1))
+    hyuck_crawl.scrape(kickstarter_comment_page_links, driver)
+
+driver.close()
 
 '''
 URL header changer, in case I need it.
