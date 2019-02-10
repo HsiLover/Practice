@@ -10,6 +10,14 @@ print('Starting the script...')
 #threading
 
 while True:
+    try:
+        timezone = timezone('EST')
+        break
+    except:
+        print('Timezone module is being crappy again...')
+est_time = datetime.now(timezone)
+
+while True:
     conn = sqlite3.connect('IG_auto_upload.sqlite')
     cur = conn.cursor()
     cur.execute('CREATE TABLE IF NOT EXISTS instagram(post_time CHAR(50) PRIMARY KEY NOT NULL, photo CHAR(300) NOT NULL, caption CHAR(500) NOT NULL)')
@@ -22,6 +30,11 @@ while True:
     print('Loading the queue...')
 
     data = cur.fetchall()
+    if len(data) == 0:
+        print('There is no post to be scheduled...')
+        time.sleep(7200)
+        continue
+            
     post_list = list()
 
     for entry in data:
@@ -37,13 +50,7 @@ while True:
         post_list.append(post_entry)
 
     print('Parsing the queue...')
-    while True:
-        try:
-            timezone = timezone('EST')
-            break
-        except:
-            print('Timezone module is being crappy again...')
-    est_time = datetime.now(timezone)
+    
 
     print('Looking at the queue')
 
