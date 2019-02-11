@@ -13,7 +13,7 @@ from InstagramAPI import InstagramAPI
 
 class COPIEDAPI(InstagramAPI):
 
-    def is_my_friend(self, user_id, last_id == None):
+    def is_my_friend(self, user_id, last_id = None):
         super().getUserFollowings(user_id)
         if self.username_id in (x['pk'] for x in self.LastJson['users']):
             return True
@@ -23,11 +23,16 @@ if platform.system() == 'Windows':
     space_character = '\r\n'
 else:
     space_character = '\n'
-    
+
 f = open('./instagram_auto_unfollow_.txt', 'a+')
 last_id = f.read().split(space_character)[-1]
 
-api = COPIEDAPI('ID', 'PASSWORD')
+if len(f.read().split(space_character)) > 10:
+    f.close()
+    f = open('./instagram_auto_unfollow_.txt', 'w+')
+
+
+api = COPIEDAPI('id', 'password')
 
 api.login()
 
@@ -35,22 +40,22 @@ api.login()
 api.getSelfUsersFollowing()
 my_followings = api.LastJson['users']
 print('Loading my following list...')
-    
-my_followings_id = map((lambda x:x['pk']), my_followings)
+
+my_followings_id = list(map((lambda x:x['pk']), my_followings))
 print('Sorting my followings...')
-    
+
 target_cursor = 0
-    
+
 if not last_id == '':
-    for i in range(len(list(my_followings_id))):
+    for i in range(len(my_followings_id)):
         if my_followings_id[i] == last_id:
-            target_cursor = i    
+            target_cursor = i
 
 for my_following_id in my_followings_id[target_cursor:]:
     if not api.is_my_friend(my_following_id):
         api.unfollow(my_following_id)
         print('Unfollowed {0}!'.format(my_following_id))
-        
+
         f.write(str(my_following_id) + '\n')
         time.sleep(36)
     else: continue
