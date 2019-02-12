@@ -41,7 +41,7 @@ while True:
     for entry in data:
         post_entry = dict()
         tmp = entry[0]
-        tmp = list(map(int, tmp.split('/')))
+        tmp = tmp.split('/')
 
         post_entry['post_day'] = tmp[0]
         post_entry['post_month'] = tmp[1]
@@ -56,10 +56,9 @@ while True:
 
     for post in post_list:
 
-        print('{}/{}/{} is being viewed...'.format(str(post['post_day']), str(post['post_month']), str(post['post_hour'])))
-
-        if (post['post_hour'] <= est_time.hour and post['post_day'] <= est_time.day and post['post_month'] <= est_time.month):
-            post_time_reformat = '\'' + str(post['post_day']) + '/' + str(post['post_month']) + '/' + str(post['post_hour']) + '\''
+        print('{}/{}/{} is being viewed...'.format(post['post_day'], post['post_month'], post['post_hour']))
+        if (int(post['post_hour']) <= est_time.hour and int(post['post_day']) <= est_time.day and int(post['post_month']) <= est_time.month):
+            post_time_reformat = '\'' + post['post_day'] + '/' + post['post_month'] + '/' + post['post_hour'] + '\''
             print('Posting...')
             api.uploadPhoto(post['photo'], post['caption'])
             time.sleep(10)
