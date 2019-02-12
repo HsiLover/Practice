@@ -24,8 +24,7 @@ if platform.system() == 'Windows':
 else:
     space_character = '\n'
 
-# Your ID and PW go here
-api = COPIEDAPI('ID', 'PASSWORD')
+api = COPIEDAPI('ID', 'PW')
 
 api.login()
 
@@ -41,8 +40,8 @@ target_cursor = 0
 while True:
 
     f = open('./instagram_auto_unfollow_.txt', 'r')
-    last_id = f.read().split(space_character)[-1]
-
+    last_id = f.read().split(space_character)[1]
+    f.close()
     if not last_id == '':
         target_cursor = my_followings_id.index(int(last_id))
 
