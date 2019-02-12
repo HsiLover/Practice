@@ -24,18 +24,10 @@ if platform.system() == 'Windows':
 else:
     space_character = '\n'
 
-f = open('./instagram_auto_unfollow_.txt', 'a+')
-last_id = f.read().split(space_character)[-1]
-
-if len(f.read().split(space_character)) > 10:
-    f.close()
-    f = open('./instagram_auto_unfollow_.txt', 'w+')
-
-
-api = COPIEDAPI('id', 'password')
+# Your ID and PW go here
+api = COPIEDAPI('ID', 'PASSWORD')
 
 api.login()
-
 
 api.getSelfUsersFollowing()
 my_followings = api.LastJson['users']
@@ -46,19 +38,24 @@ print('Sorting my followings...')
 
 target_cursor = 0
 
-if not last_id == '':
-    for i in range(len(my_followings_id)):
-        if my_followings_id[i] == last_id:
-            target_cursor = i
+while True:
 
-for my_following_id in my_followings_id[target_cursor:]:
-    if not api.is_my_friend(my_following_id):
-        api.unfollow(my_following_id)
-        print('Unfollowed {0}!'.format(my_following_id))
+    f = open('./instagram_auto_unfollow_.txt', 'r')
+    last_id = f.read().split(space_character)[-1]
 
-        f.write(str(my_following_id) + '\n')
-        time.sleep(36)
-    else: continue
+    if not last_id == '':
+        target_cursor = my_followings_id.index(int(last_id))
 
-print('Job done!')
-f.close()
+    for my_following_id in my_followings_id[target_cursor:]:
+        f = open('./instagram_auto_unfollow_.txt', 'w')
+        f.write(str(my_following_id) + space_character)
+        f.close()
+        if not api.is_my_friend(my_following_id):
+            api.unfollow(my_following_id)
+            print('Unfollowed {0}!'.format(my_following_id))
+            time.sleep(36)
+        else:
+            print('{} is a good friend of yours!'.format(my_following_id))
+            continue
+
+    print('Job done! Going for another run!')
