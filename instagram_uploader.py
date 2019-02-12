@@ -5,9 +5,8 @@ import sqlite3
 import threading
 from pytz import timezone
 
-Login_details = {'id':'', 'pw':''}
+Login_details = {'id':'ID', 'pw':'PW'}
 print('Starting the script...')
-#threading
 
 while True:
     try:
@@ -23,6 +22,8 @@ while True:
     cur.execute('CREATE TABLE IF NOT EXISTS instagram(post_time CHAR(50) PRIMARY KEY NOT NULL, photo CHAR(300) NOT NULL, caption CHAR(500) NOT NULL)')
     print('Looking at the queue database...')
 
+    print('EST now is {}/{}/{}...'.format(est_time.day, est_time.month, est_time.hour))
+
     api = IG.InstagramAPI(Login_details['id'], Login_details['pw'])
     api.login()
 
@@ -34,7 +35,7 @@ while True:
         print('There is no post to be scheduled...')
         time.sleep(7200)
         continue
-            
+
     post_list = list()
 
     for entry in data:
@@ -50,7 +51,6 @@ while True:
         post_list.append(post_entry)
 
     print('Parsing the queue...')
-    
 
     print('Looking at the queue')
 
@@ -58,18 +58,12 @@ while True:
 
         print('{}/{}/{} is being viewed...'.format(str(post['post_day']), str(post['post_month']), str(post['post_hour'])))
 
-        if (post['post_hour'] == est_time.hour and post['post_day'] == est_time.day and post['post_month'] == est_time.month) or \
-        (post['post_day'] < est_time.day and post['post_month'] == est_time.month) or (post['post_hour'] < est_time.hour and post['post_day'] == est_time.day) :
+        if (post['post_hour'] <= est_time.hour and post['post_day'] <= est_time.day and post['post_month'] <= est_time.month):
             post_time_reformat = '\'' + str(post['post_day']) + '/' + str(post['post_month']) + '/' + str(post['post_hour']) + '\''
-            while True:
-                try:
-                    print('Posting...')
-                    if api.uploadPhoto(post['photo'], post['caption'])['message'] == 'Unknown Server Error':
-                        time.sleep(10)
-                        continue
-                    break
-                except: print('Internet connection is not stable...')
-            print('{} uploaded...'.format([post['photo'], post['caption'][:50]]))
+            print('Posting...')
+            api.uploadPhoto(post['photo'], post['caption'])
+            time.sleep(10)
+            print('{} uploaded...'.format([post['photo'], post['caption'][:25]]))
             sql_command = "DELETE FROM instagram WHERE post_time = {} AND photo = {}".format(post_time_reformat, '\'' + post['photo'] + '\'')
             cur.execute(sql_command)
             print('Deleting the uploaded post from the queue...')
