@@ -15,14 +15,14 @@ while True:
         break
     except:
         print('Timezone module is being crappy again...')
-est_time = datetime.now(timezone)
 
 while True:
     conn = sqlite3.connect('IG_auto_upload.sqlite')
     cur = conn.cursor()
     cur.execute('CREATE TABLE IF NOT EXISTS instagram(post_time CHAR(50) PRIMARY KEY NOT NULL, photo CHAR(300) NOT NULL, caption CHAR(500) NOT NULL)')
     print('Looking at the queue database...')
-
+    
+    est_time = datetime.now(timezone)
     print('EST now is {}/{}/{}...'.format(est_time.day, est_time.month, est_time.hour))
 
     api = IG.InstagramAPI(Login_details['id'], Login_details['pw'])
