@@ -7,6 +7,7 @@ from pytz import timezone
 
 Login_details = {'id':'ID', 'pw':'PW'}
 print('Starting the script...')
+#threading
 
 while True:
     try:
