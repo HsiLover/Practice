@@ -15,9 +15,9 @@ api = InstagramAPI('id', 'password')
 api.login()
 
 while True:
-    input = input('What is the name of the target user?')
+    target_input = input('What is the name of the target user?')
 
-    api.searchUsername(input)
+    api.searchUsername(target_input)
     print('Target found...')
 
     target_user = api.LastJson
