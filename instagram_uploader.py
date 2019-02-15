@@ -21,12 +21,12 @@ while True:
     cur = conn.cursor()
     cur.execute('CREATE TABLE IF NOT EXISTS instagram(post_time CHAR(50) PRIMARY KEY NOT NULL, photo CHAR(300) NOT NULL, caption CHAR(500) NOT NULL)')
     print('Looking at the queue database...')
-    
+
     est_time = datetime.now(timezone)
     print('EST now is {}/{}/{}...'.format(est_time.day, est_time.month, est_time.hour))
 
     api = IG.InstagramAPI(Login_details['id'], Login_details['pw'])
-    api.login()
+
 
     cur.execute('SELECT post_time, photo, caption FROM instagram ORDER BY post_time ASC')
     print('Loading the queue...')
@@ -60,9 +60,12 @@ while True:
         print('{}/{}/{} is being viewed...'.format(post['post_day'], post['post_month'], post['post_hour']))
         if (int(post['post_hour']) <= est_time.hour and int(post['post_day']) <= est_time.day and int(post['post_month']) <= est_time.month):
             post_time_reformat = '\'' + post['post_day'] + '/' + post['post_month'] + '/' + post['post_hour'] + '\''
-            print('Posting...')
-            api.uploadPhoto(post['photo'], post['caption'])
-            time.sleep(10)
+            while True:
+                print('Attempting to post...')
+                api.login()
+                api.uploadPhoto(post['photo'], caption = post['caption'])
+                if api.LastJson['status'] == 'ok': break
+                time.sleep(30)
             print('{} uploaded...'.format([post['photo'], post['caption'][:25]]))
             sql_command = "DELETE FROM instagram WHERE post_time = {} AND photo = {}".format(post_time_reformat, '\'' + post['photo'] + '\'')
             cur.execute(sql_command)
@@ -71,5 +74,5 @@ while True:
     conn.commit()
     cur.close()
     conn.close()
-    print('Hibernate for 20 minutes...')
-    time.sleep(1200)
+    print('Hibernate for an hour...')
+    time.sleep(3600)
