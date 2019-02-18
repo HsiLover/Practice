@@ -146,7 +146,7 @@ while True:
             if not api.is_my_friend(following_id):
                 api.unfollow(following_id)
                 print('Unfollowed {0}!'.format(following_id))
-                conn.connect(sql)
+                conn = sqlite3.connect(sql)
                 cur = conn.cursor()
                 cur.execute('DELETE FROM instagram WHERE user_id = \'{}\''.format(following_id))
                 conn.commit()
