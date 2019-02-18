@@ -20,7 +20,7 @@ end_time = 21
 '''
 Put in your IG id and password down below.
 '''
-agent = {'id':'cloudeight.io', 'pw':'hoit8cloud'}
+agent = {'id':'ID', 'pw':'PW'}
 
 class COPIEDAPI(InstagramAPI):
 
