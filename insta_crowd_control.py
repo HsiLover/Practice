@@ -30,21 +30,6 @@ class COPIEDAPI(InstagramAPI):
             return True
         else: return False
 
-class Flag():
-    signal = True
-    def __init__(self):
-        thread = threading.Thread(target=self.run, args=())
-        thread.daemon = True
-        thread.start()
-
-    def run(self):
-        while True:
-            if now.hour >= start_time and now.hour < end_time:
-                self.signal = False
-            else: self.signal = True
-            time.sleep(5)
-
-
 timezone = timezone('EST')
 now = datetime.now(timezone)
 sql = './IG_crowd_control.sqlite'
@@ -135,9 +120,17 @@ while True:
         recent_second = int(time.time()) - 172800
         cur.execute('SELECT user_id FROM instagram WHERE request_time < {}'.format(recent_second))
         my_old_followings_id = cur.fetchall()
+        new_comers = set(my_followings_id) - set(my_old_followings_id)
+        for new_comer in list(new_comers):
+            cur.execute('INSERT OR IGNORE INTO instagram (user_id, request_time) VALUES ({}, {})'.format(new_comer, int(time.time())))
+        conn.commit()
         cur.close()
         conn.close()
         print('Sorting my followings...')
+
+
+
+
 
         my_followings_id = my_followings_id + my_old_followings_id
 
