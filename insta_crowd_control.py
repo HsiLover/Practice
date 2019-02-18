@@ -26,9 +26,13 @@ class COPIEDAPI(InstagramAPI):
 
     def is_my_friend(self, user_id, last_id = None):
         self.getUserFollowings(user_id)
-        if self.username_id in (x['pk'] for x in self.LastJson['users']):
+        try:
+            if self.username_id in (x['pk'] for x in self.LastJson['users']):
+                return True
+            else: return False
+        except:
             return True
-        else: return False
+
 
 timezone = timezone('EST')
 now = datetime.now(timezone)
@@ -128,10 +132,6 @@ while True:
         conn.close()
         print('Sorting my followings...')
 
-
-
-
-
         my_followings_id = my_followings_id + my_old_followings_id
 
         for following_id in my_followings_id:
@@ -148,4 +148,5 @@ while True:
                 time.sleep(36)
             else:
                 print('{} is a good friend of yours!'.format(following_id))
+                time.sleep(36)
                 continue
