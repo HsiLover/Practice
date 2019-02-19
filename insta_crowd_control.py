@@ -107,7 +107,7 @@ while True:
                 cur = conn.cursor()
                 api.follow(follower)
                 print('Friend Request has been sent to {0}'.format(follower))
-                cur.execute('INSERT INTO instagram (user_id, request_time) VALUES ({}, {})'.format(follower, int(time.time())))
+                cur.execute('INSERT OR IGNORE INTO instagram (user_id, request_time) VALUES ({}, {})'.format(follower, int(time.time())))
                 conn.commit()
                 cur.close()
                 conn.close()
