@@ -33,14 +33,17 @@ class COPIEDAPI(InstagramAPI):
         except:
             return True
 
+def time_now():
+    est_timezone = timezone('EST')
+    return datetime.now(est_timezone)
 
-timezone = timezone('EST')
-now = datetime.now(timezone)
+def condition():
+    now = time_now()
+    return now.hour <= 9 or now.hour > 21
+
 sql = './IG_crowd_control.sqlite'
-#flag = Flag()
 api = COPIEDAPI(agent['id'], agent['pw'])
 api.login()
-condition = now.hour<=9 or now.hour>21
 
 conn = sqlite3.connect(sql)
 cur = conn.cursor()
@@ -63,24 +66,27 @@ print('Saving user data...')
 
 while True:
 
-    if not condition:
+    if not condition():
         #EST 09~21 copy followers
-        if now.hour % 2 == 0:
+        if time_now().hour % 2 == 0:
             api.login()
         print('Starting copying followers...')
         conn = sqlite3.connect(sql)
         cur = conn.cursor()
 
-        cur.execute('CREATE TABLE IF NOT EXISTS copy_follow (username CHAR[50] PRIMARY KEY NOT NULL UNIQUE)')
+        cur.execute('CREATE TABLE IF NOT EXISTS copy_follow (username TEXT[50] PRIMARY KEY NOT NULL UNIQUE)')
         cur.execute('SELECT username FROM copy_follow')
-        target_inputs = cur.fetchall()
+        target_inputs = [copy[0] for copy in cur.fetchall()]
         conn.commit()
         cur.close()
         conn.close()
 
+        if not target_inputs:
+            target_inputs.append('unboxtherapy')
+
         for target_input in target_inputs:
             api.searchUsername(target_input)
-            print('Target found, target primary key {}'.format(target_input))
+            print('Target found, target ID {}'.format(target_input))
 
             target_user_id = api.LastJson['user']['pk']
             api.getUserFollowers(target_user_id)
@@ -96,22 +102,29 @@ while True:
             print('Comparing your followings with the followers...')
 
             for follower in target_followers:
-                if condition: break
+                if condition(): break
                 conn = sqlite3.connect(sql)
                 cur = conn.cursor()
                 api.follow(follower)
                 print('Friend Request has been sent to {0}'.format(follower))
-                cur.execute('INSERT INTO instagram (user_id, request_time) VALUES ({}, {})'.format(follower, now))
+                cur.execute('INSERT INTO instagram (user_id, request_time) VALUES ({}, {})'.format(follower, int(time.time())))
                 conn.commit()
                 cur.close()
                 conn.close()
                 time.sleep(36)
+                if follower == target_followers[-1]:
+                    conn = sqlite3.connect(sql)
+                    cur = conn.cursor()
+                    cur.execute('DELETE FROM copy_follow WHERE user_name = \'{}\''.format(target_input))
+                    conn.commit()
+                    cur.close()
+                    conn.close()
 
             if condition: break
 
     else:
         #EST 21~09 unfollow the unfriendly
-        if now.hour % 2 == 0:
+        if time_now().hour % 2 == 0:
             api.login()
         print('Start unfollowing...')
         api.getSelfUsersFollowing()
@@ -135,18 +148,21 @@ while True:
         my_followings_id = my_followings_id + my_old_followings_id
 
         for following_id in my_followings_id:
-            if not condition: break
-            if not api.is_my_friend(following_id):
-                api.unfollow(following_id)
-                print('Unfollowed {0}!'.format(following_id))
-                conn = sqlite3.connect(sql)
-                cur = conn.cursor()
-                cur.execute('DELETE FROM instagram WHERE user_id = \'{}\''.format(following_id))
-                conn.commit()
-                cur.close()
-                conn.close()
-                time.sleep(36)
-            else:
-                print('{} is a good friend of yours!'.format(following_id))
-                time.sleep(36)
+            if not condition(): break
+            try:
+                if not api.is_my_friend(following_id):
+                    api.unfollow(following_id)
+                    print('Unfollowed {0}!'.format(following_id))
+                    conn = sqlite3.connect(sql)
+                    cur = conn.cursor()
+                    cur.execute('DELETE FROM instagram WHERE user_id = \'{}\''.format(following_id))
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+                    time.sleep(36)
+                else:
+                    print('{} is a good friend of yours!'.format(following_id))
+                    time.sleep(36)
+                    continue
+            except:
                 continue
