@@ -115,7 +115,7 @@ while True:
                 if follower == target_followers[-1]:
                     conn = sqlite3.connect(sql)
                     cur = conn.cursor()
-                    cur.execute('DELETE FROM copy_follow WHERE user_name = \'{}\''.format(target_input))
+                    cur.execute('DELETE FROM copy_follow WHERE username = \'{}\''.format(target_input))
                     conn.commit()
                     cur.close()
                     conn.close()
