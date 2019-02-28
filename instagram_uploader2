@@ -1,0 +1,74 @@
+import time
+from datetime import datetime
+import InstagramAPI as IG
+from pytz import timezone
+import subprocess
+import os
+
+Login_details = {'id':'Your ID', 'pw':'Your Password'}
+
+est_timezone = timezone('Your timezone in the proper format')
+
+while True:
+
+    print('Starting the script...')
+    est_time = datetime.now(est_timezone)
+    print('EST now is {} / {}, around {}:00...'.format(est_time.day, est_time.month, est_time.hour))
+
+    api = IG.InstagramAPI(Login_details['id'], Login_details['pw'])
+
+    print('Looking at the queue database...')
+    queue = [x for x in os.listdir() if x.endswith('txt')]
+
+    schedule_list = list()
+    for entry in queue:
+        schedule = dict()
+        schedule['day'] = entry[0:2]
+        schedule['month'] = entry[2:4]
+        schedule['hour'] = entry[4:6]
+        schedule['txt'] = entry
+        schedule['pic'] = entry[:-3] + 'jpg'
+        schedule_list.append(schedule)
+
+    print('Generating a queue...')
+
+    if len(schedule_list) == 0:
+        print('There is no post to be scheduled...')
+        time.sleep(7200)
+        continue
+
+    print('Processing the queue...')
+
+    for entry in schedule_list:
+        print('Looking at {}'.format(entry))
+
+        day_condition = False
+
+        if est_time.month == int(entry['month']):
+            if est_time.day > int(entry['day']):
+                day_condition =  True
+            elif est_time.day == int(entry['day']):
+                if est_time.hour >= int(entry['hour']):
+                    day_condition =  True
+        elif est_time.month > int(entry['month']):
+            day_condition = True
+        elif est_time.month == 1 and int(entry['month']) == 12:
+            day_condition = True
+
+
+        if day_condition:
+            while True:
+                print('Attempting to post...')
+                api.login()
+                data = ''
+                with open(entry['txt'], 'r+') as p:
+                    data = p.read()
+                api.uploadPhoto(entry['pic'], caption = data)
+                if api.LastJson['status'] == 'ok': break
+                time.sleep(30)
+            print('{} uploaded...'.format(entry['txt']))
+            subprocess.getoutput('rm {} {}'.format(entry['txt'], entry['pic']))
+            print('Deleting the uploaded post from the queue...')
+
+    print('Hibernate for an hour...')
+    time.sleep(3600)
