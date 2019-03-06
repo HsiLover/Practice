@@ -5,6 +5,8 @@ import time
 import random
 from bs4 import BeautifulSoup
 
+#an email harvest bot that you only need to feed an url, then it will autonomously explore around, collect emails, save links, and emails in your local drive.
+
 sql = './email_harvest.sqlite'
 email_re = r'[a-zA-Z0-9.-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]*[a-zA-Z]+'
 url_re = r'@(https?|ftp)://(-\.)?([^\s/?\.#-]+\.?)+(/[^\s]*)?$@iS'
@@ -94,8 +96,11 @@ while True:
         count_email += 1
 
     for link in links:
-        cur.execute("INSERT OR IGNORE INTO webpages(links, visited) VALUES(\'{}\', 0)".format(link))
-
+        try:
+            cur.execute("INSERT OR IGNORE INTO webpages(links, visited) VALUES(\'{}\', 0)".format(link))
+        except:
+            pass
+    
     conn.commit()
     cur.close()
     conn.close()
