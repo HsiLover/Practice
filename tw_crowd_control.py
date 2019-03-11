@@ -186,8 +186,6 @@ while True:
         cur.close()
         conn.close()
 
-        print('Target found, target ID {}'.format(target_input))
-
         if not target_inputs:
             target_inputs.append('unboxtherapy')
 
@@ -195,21 +193,22 @@ while True:
 
 
         for target_input in target_inputs:
+            print('Target found, target ID {}'.format(target_input))
             url = followers_api + target_input
             copy_list = list()
             while True:
-                if not condition: break
+                if not condition(): break
                 copy_headers, copy_body = client.request(url)
                 copy_body_json = json.loads(copy_body.decode())
                 print('Extracting followers...')
 
                 for copy_target in copy_body_json['ids']:
-                    if not condition: break
+                    if not condition(): break
                     oauth_request(copy_target, category = 1)
                     print('Friend request has been sent to {}...'.format(copy_target))
                     conn = sqlite3.connect(sql)
                     cur = conn.cursor()
-                    cur.execute('INSERT OR IGNORE INTO twitter(user_id, request_time, is_friend) VALUES({}, {}, 0)'.format(copy_target, int(time.time)))
+                    cur.execute('INSERT OR IGNORE INTO twitter(user_id, request_time, is_friend) VALUES({}, {}, 0)'.format(copy_target, int(time.time())))
                     conn.commit()
                     cur.close()
                     conn.close()
