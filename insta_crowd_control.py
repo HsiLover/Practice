@@ -157,7 +157,7 @@ while True:
                     cur.close()
                     conn.close()
 
-            if condition: break
+            if condition(): break
 
     else:
         #EST 21~09 unfollow the unfriendly
