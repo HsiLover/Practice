@@ -111,6 +111,7 @@ while True:
 # if there's no copy targets, you'll copy the youtuber, unboxtherapy. Why? Because this channel happened
 # to be on when I was writing this piece of code. The channel's pretty good, actually.
         for target_input in target_inputs:
+            if condition(): break
             api.searchUsername(target_input)
             print('Target found, target ID {}'.format(target_input))
 
@@ -156,8 +157,6 @@ while True:
                     conn.commit()
                     cur.close()
                     conn.close()
-
-            if condition(): break
 
     else:
         #EST 21~09 unfollow the unfriendly
