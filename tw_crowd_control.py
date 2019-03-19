@@ -163,7 +163,7 @@ while True:
         #EST 09~21 copy followers
 
         print('Checking if there have been some friend requests...')
-        for my_friend in my_friends_list:
+        for my_friend in my_following_list:
             conn = sqlite3.connect(sql)
             cur = conn.cursor()
             if my_friend not in previous_allfriends:
