@@ -4,15 +4,21 @@ import sqlite3
 import time
 import random
 from bs4 import BeautifulSoup
-
-#an email harvest bot that you only need to feed an url, then it will autonomously explore around, collect emails, save links, and emails in your local drive.
+import multiprocessing
 
 sql = './email_harvest.sqlite'
 email_re = r'[a-zA-Z0-9.-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]*[a-zA-Z]+'
 url_re = r'@(https?|ftp)://(-\.)?([^\s/?\.#-]+\.?)+(/[^\s]*)?$@iS'
 
+def retreive(src, return_value):
+    page = requests.get(src)
+    content = page.content
+    return_value['value'] = content
+
 while True:
+    print('='*20)
     print('Loading data from DB...')
+    print('='*20)
     conn = sqlite3.connect(sql)
     cur = conn.cursor()
     cur.execute('CREATE TABLE IF NOT EXISTS email_harvest(id INTEGER NOT NULL UNIQUE PRIMARY KEY, source CHAR(200) NOT NULL, email CHAR(50) NOT NULL UNIQUE)')
@@ -33,20 +39,50 @@ while True:
     if not(source.startswith('https://') or source.startswith('http://')):
         source = 'https://' + source
 
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    if 'apple' in source:
+        print('='*20)
+        print('The website is from Apple, I will skip this...')
+        print('='*20)
+        conn = sqlite3.connect(sql)
+        cur = conn.cursor()
+        cur.execute('UPDATE webpages SET visited = 1 WHERE links = \'{}\''.format(source))
+        conn.commit()
+        cur.close()
+        conn.close()
+        continue
+
     try:
+        conn = sqlite3.connect(sql)
+        cur = conn.cursor()
+        # what i need to do - 1. make a thread, so I can timeout it 2. how to receive the return value from a threaded function?
         print('Connecting to {}...'.format(source))
-        page = requests.get(source)
-        content = page.content
+        manager = multiprocessing.Manager()
+        return_dict = manager.dict()
+        p = multiprocessing.Process(target=retreive, args=(source, return_dict))
+        start_time = time.time()
+        p.start()
+        p.join()
+        while True:
+            content = return_dict.values()[0]
+            print('Retreiving the page...')
+            if content or time.time() - start_time >= 300:
+                p.terminate()
+                break
+        if not content:
+            raise Exception('Timeout Error: server not responding...')
         print(content[:50])
     except:
         print('Somehting went wrong...')
         cur.execute('UPDATE webpages SET visited = 1 WHERE links = \'{}\''.format(source))
         flag = True
-        time.sleep(10)
-
-    conn.commit()
-    cur.close()
-    conn.close()
+    finally:
+        conn.commit()
+        cur.close()
+        conn.close()
 
     if flag:
         continue
@@ -77,7 +113,7 @@ while True:
     for link in soup_content:
         try:
             hyperlink = link['href']
-            if hyperlink.startswith('https://') or hyperlink.startwith('http://'):
+            if (hyperlink.startswith('https://') or hyperlink.startwith('http://')) and 'apple' not in hyperlink:
                 links.append(hyperlink)
         except:
             continue
@@ -100,7 +136,7 @@ while True:
             cur.execute("INSERT OR IGNORE INTO webpages(links, visited) VALUES(\'{}\', 0)".format(link))
         except:
             pass
-    
+
     conn.commit()
     cur.close()
     conn.close()
@@ -108,5 +144,5 @@ while True:
     print('='*20)
     print('{} emails, {} links have been collected from {}...'.format(count_email, count_link, source))
     print('='*20)
-    rand = random.randrange(40, 60)
+    rand = random.randrange(5,10)
     time.sleep(rand)
